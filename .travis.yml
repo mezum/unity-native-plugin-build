@@ -44,7 +44,7 @@ deploy:
   skip_cleanup: true
   on:
     repo: mezum/unity-native-plugin-build
-    tag: true
+    tags: true
 
 cache:
   directories:
