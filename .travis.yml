@@ -1,0 +1,48 @@
+language: generic
+
+matrix:
+  include:
+    - os: linux
+      env: TARGET=android
+    - os: osx
+      osx_image: xcode10.2
+      env: TARGET=ios
+    - os: osx
+      osx_image: xcode10.2
+      env: TARGET=macos
+    - os: windows
+      env: TARGET=win64
+    - os: linux
+      env: TARGET=linux_x86_64
+
+before_script:
+  - |
+    if [[ $TARGET == android ]]; then
+        if [[ ! -e android-ndk-r16b ]]; then
+            curl -L http://dl.google.com/android/repository/android-ndk-r16b-linux-x86_64.zip -O
+            unzip -oq android-ndk-r16b-linux-x86_64.zip
+            rm android-ndk-r16b-linux-x86_64.zip
+        fi
+        export ANDROID_NDK_r16b="$HOME/android-ndk-r16b"
+    fi
+
+script:
+  - bash ./build-ogg.sh
+  - bash ./build-opus.sh
+
+before_deploy:
+  - mv _bin "binary-${TARGET}-${TRAVIS_TAG}"
+  - zip "binary-${TARGET}-${TRAVIS_TAG}.zip" -r "binary-${TARGET}-${TRAVIS_TAG}"
+
+deploy:
+  provider: releases
+  api_key:
+    secure:
+  file: binary-${TARGET}-${TRAVIS_TAG}.zip
+  skip_cleanup: true
+  on:
+    tag: true
+
+cache:
+  directories:
+    - android-ndk-r16b
