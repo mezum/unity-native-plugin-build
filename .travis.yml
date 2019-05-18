@@ -18,14 +18,14 @@ matrix:
 before_script:
   - |
     if [[ $TARGET == android ]]; then
-        pushd "$HOME" >/dev/null
+        pushd "$HOME" >/dev/null;
         if [[ ! -e "android-ndk-r16b" ]]; then
-            curl -L http://dl.google.com/android/repository/android-ndk-r16b-linux-x86_64.zip -O
-            unzip -oq android-ndk-r16b-linux-x86_64.zip
-            rm android-ndk-r16b-linux-x86_64.zip
-        fi
-        popd >/dev/null
-        export ANDROID_NDK_r16b="$HOME/android-ndk-r16b"
+            curl -L http://dl.google.com/android/repository/android-ndk-r16b-linux-x86_64.zip -O;
+            unzip -oq android-ndk-r16b-linux-x86_64.zip;
+            rm android-ndk-r16b-linux-x86_64.zip;
+        fi;
+        popd >/dev/null;
+        export ANDROID_NDK_r16b="$HOME/android-ndk-r16b";
     fi
 
 script:
