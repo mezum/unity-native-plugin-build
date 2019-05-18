@@ -46,6 +46,3 @@ deploy:
     repo: mezum/unity-native-plugin-build
     tags: true
 
-cache:
-  directories:
-    - $HOME/android-ndk-r16b
