@@ -34,7 +34,15 @@ script:
 
 before_deploy:
   - mv _bin "binary-${TARGET}-${TRAVIS_TAG}"
-  - zip "binary-${TARGET}-${TRAVIS_TAG}.zip" -r "binary-${TARGET}-${TRAVIS_TAG}"
+  - |
+    if type zip >/dev/null; then
+        zip "binary-${TARGET}-${TRAVIS_TAG}.zip" -r "binary-${TARGET}-${TRAVIS_TAG}"
+    elif type 7z >/dev/null; then
+        7z a -r "binary-${TARGET}-${TRAVIS_TAG}.zip" "binary-${TARGET}-${TRAVIS_TAG}"
+    else
+        echo 'Archiver not found.'
+        exit 1
+    fi
 
 deploy:
   provider: releases
