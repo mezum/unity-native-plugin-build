@@ -82,6 +82,7 @@ cmake_build_target()
 				cmake_build $TARGET_LOWER static $TOOLCHAIN_LINUX_X86_64 "$@" || return $?
 				cmake_build $TARGET_LOWER shared $TOOLCHAIN_LINUX_X86_64 "$@" || return $?
 			fi
+			;;
 		*)
 			local TOOLCHAIN_FILE=$(eval echo '${TOOLCHAIN_'$TARGET_UPPER'}')
 			cmake_build $TARGET_LOWER static $TOOLCHAIN_FILE "$@" || return $?
