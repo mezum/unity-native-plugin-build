@@ -11,3 +11,4 @@ target_include_directories(ogg
 		${CMAKE_CURRENT_SOURCE_DIR}/ogg/include
 )
 add_subdirectory(opus)
+add_subdirectory(opusfile-cmake)

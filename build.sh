@@ -41,6 +41,7 @@ TOOLCHAIN_DEFAULT=$CMAKE_TOOLCHAIN_DIR/cxx11.cmake
 LIBRARIES="
 	ogg
 	opus
+	opusfile
 "
 
 # libogg config
@@ -55,6 +56,10 @@ CONFIGURE_OPTS_OPUS="
 	-DOPUS_ENABLE_FLOAT_API=YES
 "
 
+# libopusfile config
+CONFIGURE_OPTS_OPUSFILE="
+	-DOP_FIXED_POINT=YES
+"
 
 # arguments
 TARGET="${TARGET:?unspecified target}"
@@ -110,6 +115,7 @@ __main__()
 	# license
 	cp "${PROJ_DIR}/ogg/COPYING" "_bin/LICENSE-ogg"
 	cp "${PROJ_DIR}/opus/COPYING" "_bin/LICENSE-opus"
+	cp "${PROJ_DIR}/opusfile/COPYING" "_bin/LICENSE-opusfile"
 }
 
 cmake_build()
