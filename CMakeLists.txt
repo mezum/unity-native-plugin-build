@@ -5,10 +5,5 @@
 cmake_minimum_required(VERSION 3.0)
 
 add_subdirectory(ogg)
-# FIXME: wait for libogg's CMakeLists.txt fix.
-target_include_directories(ogg
-	PUBLIC
-		${CMAKE_CURRENT_SOURCE_DIR}/ogg/include
-)
 add_subdirectory(opus)
 add_subdirectory(opusfile-cmake)
