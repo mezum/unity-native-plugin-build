@@ -29,8 +29,7 @@ before_script:
     fi
 
 script:
-  - bash ./build-ogg.sh
-  - bash ./build-opus.sh
+  - bash ./build.sh
 
 before_deploy:
   - mv _bin "binary-${TARGET}-${TRAVIS_TAG}"
