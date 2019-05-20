@@ -121,6 +121,15 @@ cmake_build()
 	mkdir -p "$BIN_DIR"
 	rm -rf "$BIN_DIR/*"
 	while read LIBRARY_FILE; do
-		cp -L "$LIBRARY_FILE" "$BIN_DIR"
+		local FILE_NAME_EXT="$(basename "$LIBRARY_FILE")"
+		local FILE_EXT="${FILE_NAME_EXT##*.}"
+		local FILE_NAME="${FILE_NAME_EXT%.*}"
+		
+		local FILE_EXT_FIX="$FILE_EXT"
+		if [[ $FILE_EXT == dylib ]]; then
+			FILE_EXT_FIX="bundle"
+		fi
+		
+		cp -L "$LIBRARY_FILE" "$BIN_DIR/$FILE_NAME.$FILE_EXT_FIX"
 	done < <(find "$INSTALL_PREFIX" -name *$LIBRARY_NAME.a -o -name *$LIBRARY_NAME.so -o -name *$LIBRARY_NAME.dylib -o -name *$LIBRARY_NAME.lib -o -name *$LIBRARY_NAME.dll)
 }
