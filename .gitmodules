@@ -7,3 +7,6 @@
 [submodule "polly"]
 	path = polly
 	url = https://github.com/pokey909/polly.git
+[submodule "opusfile"]
+	path = opusfile
+	url = https://github.com/xiph/opusfile
