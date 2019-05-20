@@ -43,7 +43,7 @@ set_target_properties(opusfile
 )
 
 if(OP_FIXED_POINT)
-	target_compile_definitions(opusfile PUBLIC OP_FIXED_POINT=1)
+	target_compile_definitions(opusfile PRIVATE OP_FIXED_POINT=1)
 endif()
 
 install(
