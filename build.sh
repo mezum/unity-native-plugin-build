@@ -122,5 +122,5 @@ cmake_build()
 	rm -rf "$BIN_DIR/*"
 	while read LIBRARY_FILE; do
 		cp -L "$LIBRARY_FILE" "$BIN_DIR"
-	done < <(find "$INSTALL_PREFIX" -name *$LIBRARY_NAME.a -o -name *$LIBRARY_NAME.so -o -name *$LIBRARY_NAME.dylib -o -name *$LIBRARY_NAME.dll)
+	done < <(find "$INSTALL_PREFIX" -name *$LIBRARY_NAME.a -o -name *$LIBRARY_NAME.so -o -name *$LIBRARY_NAME.dylib -o -name *$LIBRARY_NAME.lib -o -name *$LIBRARY_NAME.dll)
 }
