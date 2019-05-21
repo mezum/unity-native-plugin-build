@@ -6,8 +6,8 @@
 
 # @(#)Build static/shared libraries.
 # @(#)Usage:
-# @(#)    TARGET=<TARGET_NAME> [BUILD_TYPE="..."] ./build-ogg.sh
-# @(#)TARGET_NAME:
+# @(#)    TARGET=<TARGET_NAME> [BUILD_TYPE=<BUILD_TYPE>] ./build-ogg.sh
+# @(#)<TARGET_NAME>:
 # @(#)    android
 # @(#)    android_armv7
 # @(#)    android_arm64
@@ -17,10 +17,10 @@
 # @(#)    win64
 # @(#)    linux_x86_64
 # @(#)    default
-# @(#)BUILD_TYPE(case sensitive):
+# @(#)<BUILD_TYPE> (case sensitive!):
 # @(#)    Debug
 # @(#)    Release
-# @(#)    MinSizeRel
+# @(#)    MinSizeRel      (default)
 # @(#)    RelWithDebInfo
 
 # common variables
@@ -38,28 +38,55 @@ TOOLCHAIN_LINUX_X86_64=$CMAKE_TOOLCHAIN_DIR/linux-gcc-x64.cmake
 TOOLCHAIN_DEFAULT=$CMAKE_TOOLCHAIN_DIR/cxx11.cmake
 
 # library list
-LIBRARIES="
+LIBRARIES="$(cat <<- __EOL__
 	ogg
 	opus
 	opusfile
-"
+	sqlite3
+__EOL__
+)"
 
 # libogg config
-CONFIGURE_OPTS_OGG=""
+CONFIGURE_OPTS_OGG="$(cat <<- __EOL__
+__EOL__
+)"
 
 # libopus config
-CONFIGURE_OPTS_OPUS="
+CONFIGURE_OPTS_OPUS="$(cat <<- __EOL__
 	-DOPUS_INSTALL_PKG_CONFIG_MODULE=NO
 	-DOPUS_INSTALL_CMAKE_CONFIG_MODULE=NO
 	-DOPUS_STACK_PROTECTOR=NO
 	-DOPUS_FIXED_POINT=YES
 	-DOPUS_ENABLE_FLOAT_API=YES
-"
+__EOL__
+)"
 
 # libopusfile config
-CONFIGURE_OPTS_OPUSFILE="
+CONFIGURE_OPTS_OPUSFILE="$(cat <<- __EOL__
 	-DOP_FIXED_POINT=YES
-"
+__EOL__
+)"
+
+# libsqlite3 config
+CONFIGURE_OPTS_SQLITE3="$(cat <<- __EOL__
+	-DSQLITE_THREADSAFE=YES
+	-DSQLITE_DEFAULT_MEMSTATUS=NO
+	-DSQLITE_DEFAULT_WAL_SYNCHRONOUS=YES
+	-DSQLITE_LIKE_DOESNT_MATCH_BLOBS=YES
+	-DSQLITE_OMIT_DECLTYPE=YES
+	-DSQLITE_OMIT_SHARED_CACHE=YES
+	-DSQLITE_USE_ALLOCA=YES
+__EOL__
+)"
+
+# License files
+LICENSE_FILES="$(cat <<- __EOL__
+	${PROJ_DIR}/ogg/COPYING	$PWD/_bin/COPYING-ogg
+	${PROJ_DIR}/opus/COPYING	$PWD/_bin/COPYING-opus
+	${PROJ_DIR}/opusfile/COPYING	$PWD/_bin/COPYING-opusfile
+	${PROJ_DIR}/sqlite3/COPYING	$PWD/_bin/COPYING-sqlite3
+__EOL__
+)"
 
 # arguments
 TARGET="${TARGET:?unspecified target}"
@@ -112,10 +139,10 @@ __main__()
 			;;
 	esac
 	
-	# license
-	cp "${PROJ_DIR}/ogg/COPYING" "_bin/LICENSE-ogg"
-	cp "${PROJ_DIR}/opus/COPYING" "_bin/LICENSE-opus"
-	cp "${PROJ_DIR}/opusfile/COPYING" "_bin/LICENSE-opusfile"
+	# license files
+	while read src dst; do
+		cp "$src" "$dst" || return $?
+	done < <(echo "$LICENSE_FILES")
 }
 
 cmake_build()
@@ -156,7 +183,7 @@ cmake_build()
 			FILE_EXT_FIX="bundle"
 		fi
 		
-		cp -L "$LIBRARY_FILE" "$BIN_DIR/$FILE_NAME.$FILE_EXT_FIX"
+		cp -L "$LIBRARY_FILE" "$BIN_DIR/$FILE_NAME.$FILE_EXT_FIX" || return $?
 	done < <(find -E "$INSTALL_PREFIX" -iregex '[^.]+\.(a|so|dylib|lib|dll)')
 }
 

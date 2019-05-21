@@ -39,7 +39,7 @@ target_include_directories(opusfile
 )
 set_target_properties(opusfile
 	PROPERTIES
-		PUBLIC_HEADER ${OPUSFILE_HEADER}
+		PUBLIC_HEADER "${OPUSFILE_HEADER}"
 )
 
 if(OP_FIXED_POINT)
