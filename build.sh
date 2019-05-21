@@ -183,7 +183,15 @@ cmake_build()
 		fi
 		
 		cp -L "$LIBRARY_FILE" "$BIN_DIR/$FILE_NAME.$FILE_EXT_FIX" || return $?
-	done < <(find -E "$INSTALL_PREFIX" -iregex '[^.]+\.(a|so|dylib|lib|dll)')
+	done < <(
+		find "$INSTALL_PREFIX" \
+			-iname '*.a' \
+			-o -iname '*.so' \
+			-o -iname '*.dylib' \
+			-o -iname '*.lib' \
+			-o -iname '*.dll' \
+			| grep -E '[^.]+\.[^.]+'
+	)
 }
 
 __main__ "$@"
