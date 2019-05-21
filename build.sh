@@ -160,7 +160,6 @@ cmake_build()
 	rm -rf "$BUILD_DIR/*"
 	pushd "$BUILD_DIR" >/dev/null 2>/dev/null
 	cmake "$PROJ_DIR" \
-		$CONFIGURE_OPTS \
 		-DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN" \
 		-DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" \
 		-DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
