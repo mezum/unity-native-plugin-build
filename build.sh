@@ -26,6 +26,7 @@
 # common variables
 PROJ_DIR="$(cd "$(dirname "${BASH_SCRIPT:-$0}")"; pwd)"
 CMAKE_TOOLCHAIN_DIR="$PROJ_DIR/polly"
+COMBINED_LIBNAME=unityplugin
 
 # toolchains
 TOOLCHAIN_ANDROID_ARMV7=$CMAKE_TOOLCHAIN_DIR/android-ndk-r16b-api-16-armeabi-v7a-thumb-clang-libcxx14.cmake
@@ -84,7 +85,6 @@ LICENSE_FILES="$(cat <<- __EOL__
 	${PROJ_DIR}/ogg/COPYING	$PWD/_bin/COPYING-ogg
 	${PROJ_DIR}/opus/COPYING	$PWD/_bin/COPYING-opus
 	${PROJ_DIR}/opusfile/COPYING	$PWD/_bin/COPYING-opusfile
-	${PROJ_DIR}/sqlite3/COPYING	$PWD/_bin/COPYING-sqlite3
 __EOL__
 )"
 
@@ -170,8 +170,8 @@ cmake_build()
 	popd >/dev/null 2>/dev/null
 	
 	local BIN_DIR="$PWD/_bin/$TARGET_NAME"
+	rm -rf "$BIN_DIR"
 	mkdir -p "$BIN_DIR"
-	rm -rf "$BIN_DIR/*"
 	while read LIBRARY_FILE; do
 		local FILE_NAME_EXT="$(basename "$LIBRARY_FILE")"
 		local FILE_EXT="${FILE_NAME_EXT##*.}"
@@ -185,12 +185,11 @@ cmake_build()
 		cp -L "$LIBRARY_FILE" "$BIN_DIR/$FILE_NAME.$FILE_EXT_FIX" || return $?
 	done < <(
 		find "$INSTALL_PREFIX" \
-			-iname '*.a' \
-			-o -iname '*.so' \
-			-o -iname '*.dylib' \
-			-o -iname '*.lib' \
-			-o -iname '*.dll' \
-			| grep -E '[^.]+\.[^.]+'
+			-iname "lib$COMBINED_LIBNAME.a" \
+			-o -iname "lib$COMBINED_LIBNAME.so" \
+			-o -iname "lib$COMBINED_LIBNAME.dylib" \
+			-o -iname "$COMBINED_LIBNAME.lib" \
+			-o -iname "$COMBINED_LIBNAME.dll"
 	)
 }
 

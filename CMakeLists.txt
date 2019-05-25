@@ -8,3 +8,19 @@ add_subdirectory(ogg)
 add_subdirectory(opus)
 add_subdirectory(opusfile-cmake)
 add_subdirectory(sqlite3-cmake)
+
+add_library(unityplugin dummy.c)
+target_link_libraries(unityplugin
+	ogg
+	opus
+	opusfile
+	sqlite3
+)
+
+install(
+	TARGETS unityplugin
+	ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+	LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+	RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+	PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_PREFIX}/include
+)
