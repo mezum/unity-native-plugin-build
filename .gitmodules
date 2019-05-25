@@ -10,3 +10,6 @@
 [submodule "opusfile"]
 	path = opusfile
 	url = https://github.com/xiph/opusfile.git
+[submodule "sqlite3"]
+	path = sqlite3
+	url = https://github.com/mezum/sqlite-amalgamation-mirror.git

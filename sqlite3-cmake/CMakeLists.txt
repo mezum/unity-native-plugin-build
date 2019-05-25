@@ -41,7 +41,7 @@ option(
 	OFF
 )
 
-set(SQLITE3_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../sqlite3)
+set(SQLITE3_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../sqlite3/src)
 
 set(SQLITE3_HEADER
 	${SQLITE3_ROOT}/sqlite3.h
