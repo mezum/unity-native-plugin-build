@@ -55,10 +55,14 @@ if (MSVC AND NOT ANDROID)
 	)
 	
 	# shared library
+	set(UNITY_PLUGIN_VS_WHOLEARCHIVE "")
+	foreach(lib IN LISTS UNITY_PLUGIN_TARGET_FILES)
+		set(UNITY_PLUGIN_VS_WHOLEARCHIVE "${UNITY_PLUGIN_VS_WHOLEARCHIVE} /WHOLEARCHIVE:${lib}")
+	endforeach()
 	target_link_libraries(unity-native-plugin-shared ${UNITY_PLUGIN_LIBRARIES})
 	set_target_properties(unity-native-plugin-shared
 		PROPERTIES
-			LINK_FLAGS "/WHOLEARCHIVE"
+			LINK_FLAGS "${UNITY_PLUGIN_VS_WHOLEARCHIVE}"
 	)
 elseif(CMAKE_GENERATOR STREQUAL Xcode)
 	# static library
