@@ -5,10 +5,10 @@ matrix:
     - os: linux
       env: TARGET=android
     - os: osx
-      osx_image: xcode10.2
+      osx_image: xcode9.4
       env: TARGET=ios
     - os: osx
-      osx_image: xcode10.2
+      osx_image: xcode8.3
       env: TARGET=macos
     - os: windows
       env: TARGET=win64

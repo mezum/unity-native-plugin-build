@@ -5,6 +5,21 @@
 cmake_minimum_required(VERSION 3.0)
 project(unity-native-plugin)
 
+# definition for modules.
+option(OPUS_INSTALL_PKG_CONFIG_MODULE "" NO)
+option(OPUS_INSTALL_CMAKE_CONFIG_MODULE "" NO)
+option(OPUS_STACK_PROTECTOR "" NO)
+option(OPUS_FIXED_POINT "" YES)
+option(OPUS_ENABLE_FLOAT_API "" YES)
+option(OP_FIXED_POINT "" YES)
+option(SQLITE_THREADSAFE "" YES)
+option(SQLITE_DEFAULT_MEMSTATUS "" NO)
+option(SQLITE_DEFAULT_WAL_SYNCHRONOUS "" YES)
+option(SQLITE_LIKE_DOESNT_MATCH_BLOBS "" YES)
+option(SQLITE_OMIT_DECLTYPE "" YES)
+option(SQLITE_OMIT_SHARED_CACHE "" YES)
+option(SQLITE_USE_ALLOCA "" YES)
+
 # properties for unity native plugin
 set(UNITY_PLUGIN_OUTPUT_NAME unityplugin)
 set(UNITY_PLUGIN_STATIC_FILE ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}${UNITY_PLUGIN_OUTPUT_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
@@ -22,7 +37,7 @@ endforeach()
 
 # make shared library target
 add_library(unity-native-plugin-shared SHARED dummy.c)
-set_target_properties(unity-native-plugin-shared
+set_target_properties(unity-native-plugin-shared ${UNITY_PLUGIN_LIBRARIES}
 	PROPERTIES
 		OUTPUT_NAME ${UNITY_PLUGIN_OUTPUT_NAME}
 		POSITION_INDEPENDENT_CODE ON
