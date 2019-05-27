@@ -57,7 +57,7 @@ if (MSVC AND NOT ANDROID)
 	# shared library
 	target_link_libraries(unity-native-plugin-shared ${UNITY_PLUGIN_LIBRARIES})
 	foreach (lib IN LISTS UNITY_PLUGIN_LIBRARIES)
-		target_link_libraries(unity-native-plugin-shared /WHOLEARCHIVE:$<TARGET_FILE:${lib}>)
+		target_link_libraries(unity-native-plugin-shared -WHOLEARCHIVE:$<TARGET_FILE:${lib}>)
 	endforeach()
 elseif(CMAKE_GENERATOR STREQUAL Xcode)
 	# static library
