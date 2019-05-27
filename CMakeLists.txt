@@ -29,10 +29,10 @@ set(UNITY_PLUGIN_LIBRARIES
 	opusfile
 	sqlite3
 )
-set(UNITY_PLUGIN_TARGET_FILES "")
+set(UNITY_PLUGIN_TARGET_FILE_GENERATORS "")
 foreach(library IN LISTS UNITY_PLUGIN_LIBRARIES)
 	add_subdirectory(${library})
-	set(UNITY_PLUGIN_TARGET_FILES ${UNITY_PLUGIN_TARGET_FILES} "$<TARGET_FILE:${library}>")
+	set(UNITY_PLUGIN_TARGET_FILE_GENERATORS ${UNITY_PLUGIN_TARGET_FILE_GENERATORS} "$<TARGET_FILE:${library}>")
 endforeach()
 
 # make shared library target
@@ -50,26 +50,21 @@ if (MSVC AND NOT ANDROID)
 	add_custom_target(unity-native-plugin-static ALL
 		COMMAND ${UNITY_PLUGIN_VS_BIN_DIR}/LIB.exe
 			/out:${UNITY_PLUGIN_STATIC_FILE}
-			${UNITY_PLUGIN_TARGET_FILES}
+			${UNITY_PLUGIN_TARGET_FILE_GENERATORS}
 		DEPENDS ${UNITY_PLUGIN_LIBRARIES}
 	)
 	
 	# shared library
-	set(UNITY_PLUGIN_VS_WHOLEARCHIVE "")
-	foreach(lib IN LISTS UNITY_PLUGIN_TARGET_FILES)
-		set(UNITY_PLUGIN_VS_WHOLEARCHIVE "${UNITY_PLUGIN_VS_WHOLEARCHIVE} /WHOLEARCHIVE:${lib}")
-	endforeach()
 	target_link_libraries(unity-native-plugin-shared ${UNITY_PLUGIN_LIBRARIES})
-	set_target_properties(unity-native-plugin-shared
-		PROPERTIES
-			LINK_FLAGS "${UNITY_PLUGIN_VS_WHOLEARCHIVE}"
-	)
+	foreach (lib in LISTS UNITY_PLUGIN_LIBRARIES)
+		target_link_libraries(unity-native-plugin-shared /WHOLEARCHIVE:$<TARGET_FILE:${lib}>)
+	endforeach()
 elseif(CMAKE_GENERATOR STREQUAL Xcode)
 	# static library
 	add_custom_target(unity-native-plugin-static ALL
 		COMMAND xcrun libtool -static
 			-o ${UNITY_PLUGIN_STATIC_FILE}
-			${UNITY_PLUGIN_TARGET_FILES}
+			${UNITY_PLUGIN_TARGET_FILE_GENERATORS}
 		DEPENDS ${UNITY_PLUGIN_LIBRARIES}
 	)
 	
@@ -81,15 +76,16 @@ elseif(CMAKE_GENERATOR STREQUAL Xcode)
 	)
 else()
 	# static library
-	set(UNITY_PLUGIN_STATIC_MRI ${CMAKE_CURRENT_BINARY_DIR}/merge.mri)
-	set(UNITY_PLUGIN_STATIC_MRI_CONTENT "create ${UNITY_PLUGIN_STATIC_FILE}\n")
-	foreach (static_library IN LISTS UNITY_PLUGIN_TARGET_FILES)
-		set(UNITY_PLUGIN_STATIC_MRI_CONTENT "${UNITY_PLUGIN_STATIC_MRI_CONTENT}addlib ${static_library}\n")
+	set(UNITY_PLUGIN_MRI ${CMAKE_CURRENT_BINARY_DIR}/merge.mri)
+	set(UNITY_PLUGIN_MRI_CONTENT "create ${UNITY_PLUGIN_STATIC_FILE}\n")
+	foreach (lib IN LISTS UNITY_PLUGIN_TARGET_FILE_GENERATORS)
+		# file(generate ...) evaluetes generator expression.
+		set(UNITY_PLUGIN_MRI_CONTENT "${UNITY_PLUGIN_MRI_CONTENT}addlib ${lib}\n")
 	endforeach()
-	set(UNITY_PLUGIN_STATIC_MRI_CONTENT "${UNITY_PLUGIN_STATIC_MRI_CONTENT}save\nend\n")
-	file(GENERATE OUTPUT ${UNITY_PLUGIN_STATIC_MRI} CONTENT "${UNITY_PLUGIN_STATIC_MRI_CONTENT}")
+	set(UNITY_PLUGIN_MRI_CONTENT "${UNITY_PLUGIN_MRI_CONTENT}save\nend\n")
+	file(GENERATE OUTPUT ${UNITY_PLUGIN_MRI} CONTENT "${UNITY_PLUGIN_MRI_CONTENT}")
 	add_custom_target(unity-native-plugin-static ALL
-		COMMAND ${CMAKE_AR} -M <${UNITY_PLUGIN_STATIC_MRI}
+		COMMAND ${CMAKE_AR} -M <${UNITY_PLUGIN_MRI}
 		DEPENDS ${UNITY_PLUGIN_LIBRARIES}
 	)
 	
