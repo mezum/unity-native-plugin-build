@@ -11,7 +11,7 @@ option(
 	OFF
 )
 
-set(OPUSFILE_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../opusfile)
+set(OPUSFILE_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/../opusfile-src)
 
 set(OPUSFILE_HEADER
 	${OPUSFILE_ROOT}/include/opusfile.h

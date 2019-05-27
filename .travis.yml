@@ -20,7 +20,7 @@ before_script:
     if [[ $TARGET == android ]]; then
         pushd "$HOME" >/dev/null
         if [[ ! -e "android-ndk-r16b/source.properties" ]]; then
-            curl -L http://dl.google.com/android/repository/android-ndk-r16b-linux-x86_64.zip -O
+            curl --retry 10 -L http://dl.google.com/android/repository/android-ndk-r16b-linux-x86_64.zip -O
             unzip -oq android-ndk-r16b-linux-x86_64.zip
             rm android-ndk-r16b-linux-x86_64.zip
         fi

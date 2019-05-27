@@ -7,9 +7,9 @@
 [submodule "polly"]
 	path = polly
 	url = https://github.com/pokey909/polly.git
-[submodule "opusfile"]
-	path = opusfile
-	url = https://github.com/xiph/opusfile.git
-[submodule "sqlite3"]
-	path = sqlite3
+[submodule "sqlite3-src"]
+	path = sqlite3-src
 	url = https://github.com/mezum/sqlite-amalgamation-mirror.git
+[submodule "opusfile-src"]
+	path = opusfile-src
+	url = https://github.com/xiph/opusfile.git

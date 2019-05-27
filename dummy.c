@@ -2,6 +2,4 @@
 // This script is released under the 2-Clause BSD License.
 // See https://opensource.org/licenses/BSD-2-Clause
 
-void unity_native_plugin_dummy()
-{
-}
+const char* const UNITY_NATIVE_LUGIN_BUILD = "";

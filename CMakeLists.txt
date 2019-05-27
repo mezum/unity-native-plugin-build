@@ -3,22 +3,93 @@
 # See https://opensource.org/licenses/BSD-2-Clause
 
 cmake_minimum_required(VERSION 3.0)
+project(unity-native-plugin)
 
-add_subdirectory(ogg)
-add_subdirectory(opus)
-add_subdirectory(opusfile-cmake)
-add_subdirectory(sqlite3-cmake)
-
-add_library(unityplugin dummy.c)
-target_link_libraries(unityplugin
+# properties for unity native plugin
+set(UNITY_PLUGIN_OUTPUT_NAME unityplugin)
+set(UNITY_PLUGIN_STATIC_FILE ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}${UNITY_PLUGIN_OUTPUT_NAME}${CMAKE_STATIC_LIBRARY_SUFFIX})
+set(UNITY_PLUGIN_LIBRARIES
 	ogg
 	opus
 	opusfile
 	sqlite3
 )
+set(UNITY_PLUGIN_TARGET_FILES "")
+foreach(library IN LISTS UNITY_PLUGIN_LIBRARIES)
+	add_subdirectory(${library})
+	set(UNITY_PLUGIN_TARGET_FILES ${UNITY_PLUGIN_TARGET_FILES} "$<TARGET_FILE:${library}>")
+endforeach()
 
+# make shared library target
+add_library(unity-native-plugin-shared SHARED dummy.c)
+set_target_properties(unity-native-plugin-shared
+	PROPERTIES
+		OUTPUT_NAME ${UNITY_PLUGIN_OUTPUT_NAME}
+		POSITION_INDEPENDENT_CODE ON
+)
+
+# platform-dependent configuration
+if (MSVC AND NOT ANDROID)
+	# static library
+	get_filename_component(UNITY_PLUGIN_VS_BIN_DIR "${CMAKE_LINKER}" DIRECTORY)
+	add_custom_target(unity-native-plugin-static ALL
+		COMMAND ${UNITY_PLUGIN_VS_BIN_DIR}/LIB.exe
+			/out:${UNITY_PLUGIN_STATIC_FILE}
+			${UNITY_PLUGIN_TARGET_FILES}
+		OUTPUT ${UNITY_PLUGIN_STATIC_FILE}
+		DEPENDS ${UNITY_PLUGIN_LIBRARIES}
+	)
+	
+	# shared library
+	target_link_libraries(unity-native-plugin-shared ${UNITY_PLUGIN_LIBRARIES})
+	set_target_properties(unity-native-plugin-shared
+		PROPERTIES
+			LINK_FLAGS "/WHOLEARCHIVE"
+	)
+elseif(CMAKE_GENERATOR STREQUAL Xcode)
+	# static library
+	add_custom_target(unity-native-plugin-static ALL
+		COMMAND xcrun libtool -static
+			-o ${UNITY_PLUGIN_STATIC_FILE}
+			${UNITY_PLUGIN_TARGET_FILES}
+		DEPENDS ${UNITY_PLUGIN_LIBRARIES}
+	)
+	
+	# shared library
+	target_link_libraries(unity-native-plugin-shared ${UNITY_PLUGIN_LIBRARIES})
+	set_target_properties(unity-native-plugin-shared
+		PROPERTIES
+			LINK_FLAGS "-all_load"
+	)
+else()
+	# static library
+	set(UNITY_PLUGIN_STATIC_MRI ${CMAKE_CURRENT_BINARY_DIR}/merge.mri)
+	set(UNITY_PLUGIN_STATIC_MRI_CONTENT "create ${UNITY_PLUGIN_STATIC_FILE}\n")
+	foreach (static_library IN LISTS UNITY_PLUGIN_TARGET_FILES)
+		set(UNITY_PLUGIN_STATIC_MRI_CONTENT "${UNITY_PLUGIN_STATIC_MRI_CONTENT}addlib ${static_library}\n")
+	endforeach()
+	set(UNITY_PLUGIN_STATIC_MRI_CONTENT "${UNITY_PLUGIN_STATIC_MRI_CONTENT}save\nend\n")
+	file(GENERATE OUTPUT ${UNITY_PLUGIN_STATIC_MRI} CONTENT "${UNITY_PLUGIN_STATIC_MRI_CONTENT}")
+	add_custom_target(unity-native-plugin-static ALL
+		COMMAND ${CMAKE_AR} -M <${UNITY_PLUGIN_STATIC_MRI}
+		DEPENDS ${UNITY_PLUGIN_LIBRARIES}
+	)
+	
+	# shared library
+	target_link_libraries(unity-native-plugin-shared
+		"-Wl,-whole-archive"
+		${UNITY_PLUGIN_LIBRARIES}
+		"-Wl,-no-whole-archive"
+	)
+endif()
+
+# install
 install(
-	TARGETS unityplugin
+	FILES ${UNITY_PLUGIN_STATIC_FILE}
+	DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
+)
+install(
+	TARGETS unity-native-plugin-shared
 	ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
 	LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
 	RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/lib

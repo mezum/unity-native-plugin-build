@@ -20,13 +20,13 @@
 # @(#)<BUILD_TYPE> (case sensitive!):
 # @(#)    Debug
 # @(#)    Release
-# @(#)    MinSizeRel      (default)
-# @(#)    RelWithDebInfo
+# @(#)    MinSizeRel
+# @(#)    RelWithDebInfo  (default)
 
 # common variables
 PROJ_DIR="$(cd "$(dirname "${BASH_SCRIPT:-$0}")"; pwd)"
 CMAKE_TOOLCHAIN_DIR="$PROJ_DIR/polly"
-COMBINED_LIBNAME=unityplugin
+LIBRARY_NAME='unityplugin'
 
 # toolchains
 TOOLCHAIN_ANDROID_ARMV7=$CMAKE_TOOLCHAIN_DIR/android-ndk-r16b-api-16-armeabi-v7a-thumb-clang-libcxx14.cmake
@@ -84,13 +84,13 @@ __EOL__
 LICENSE_FILES="$(cat <<- __EOL__
 	${PROJ_DIR}/ogg/COPYING	$PWD/_bin/COPYING-ogg
 	${PROJ_DIR}/opus/COPYING	$PWD/_bin/COPYING-opus
-	${PROJ_DIR}/opusfile/COPYING	$PWD/_bin/COPYING-opusfile
+	${PROJ_DIR}/opusfile-src/COPYING	$PWD/_bin/COPYING-opusfile
 __EOL__
 )"
 
 # arguments
 TARGET="${TARGET:?unspecified target}"
-BUILD_TYPE="${BUILD_TYPE:-MinSizeRel}"
+BUILD_TYPE="${BUILD_TYPE:-RelWithDebInfo}"
 
 __main__()
 {
@@ -104,38 +104,30 @@ __main__()
 	local TARGET_UPPER="$(tr '[a-z]' '[A-Z]' <<< $TARGET)"
 	case "$TARGET_LOWER" in
 		"android")
-			cmake_build android_armv7 static "$TOOLCHAIN_ANDROID_ARMV7" $CONFIGURE_OPTS "$@" || return $?
-			cmake_build android_armv7 shared "$TOOLCHAIN_ANDROID_ARMV7" $CONFIGURE_OPTS "$@" || return $?
-			cmake_build android_arm64 static "$TOOLCHAIN_ANDROID_ARM64" $CONFIGURE_OPTS "$@" || return $?
-			cmake_build android_arm64 shared "$TOOLCHAIN_ANDROID_ARM64" $CONFIGURE_OPTS "$@" || return $?
-			cmake_build android_x86 static "$TOOLCHAIN_ANDROID_X86" $CONFIGURE_OPTS "$@" || return $?
-			cmake_build android_x86 shared "$TOOLCHAIN_ANDROID_X86" $CONFIGURE_OPTS "$@" || return $?
+			cmake_build android_armv7 "$TOOLCHAIN_ANDROID_ARMV7" $CONFIGURE_OPTS "$@" || return $?
+			cmake_build android_arm64 "$TOOLCHAIN_ANDROID_ARM64" $CONFIGURE_OPTS "$@" || return $?
+			cmake_build android_x86 "$TOOLCHAIN_ANDROID_X86" $CONFIGURE_OPTS "$@" || return $?
 			;;
 		"ios")
 			export XCODE_XCCONFIG_FILE="$PROJ_DIR/polly/scripts/NoCodeSign.xcconfig"
-			cmake_build $TARGET_LOWER static "$TOOLCHAIN_IOS" -GXcode $CONFIGURE_OPTS "$@" || return $?
+			cmake_build $TARGET_LOWER "$TOOLCHAIN_IOS" -GXcode $CONFIGURE_OPTS -DIOS_DEPLOYMENT_SDK_VERSION=9.0 "$@" || return $?
 			;;
 		"macos")
-			cmake_build $TARGET_LOWER static "$TOOLCHAIN_MACOS" -GXcode $CONFIGURE_OPTS "$@" || return $?
-			cmake_build $TARGET_LOWER shared "$TOOLCHAIN_MACOS" -GXcode $CONFIGURE_OPTS "$@" || return $?
+			cmake_build $TARGET_LOWER "$TOOLCHAIN_MACOS" -GXcode $CONFIGURE_OPTS "$@" || return $?
 			;;
 		"win64")
-			cmake_build $TARGET_LOWER static "$TOOLCHAIN_WIN64" -G'Visual Studio 15 2017' $CONFIGURE_OPTS "$@" || return $?
-			cmake_build $TARGET_LOWER shared "$TOOLCHAIN_WIN64" -G'Visual Studio 15 2017' $CONFIGURE_OPTS "$@" || return $?
+			cmake_build $TARGET_LOWER "$TOOLCHAIN_WIN64" -G'Visual Studio 15 2017' $CONFIGURE_OPTS "$@" || return $?
 			;;
 		"linux_x86_64")
 			if [[ $(uname) == Linux && $(uname -m) == x86_64 ]]; then
-				cmake_build $TARGET_LOWER static "$TOOLCHAIN_DEFAULT" $CONFIGURE_OPTS "$@" || return $?
-				cmake_build $TARGET_LOWER shared "$TOOLCHAIN_DEFAULT" $CONFIGURE_OPTS "$@" || return $?
+				cmake_build $TARGET_LOWER "$TOOLCHAIN_DEFAULT" $CONFIGURE_OPTS "$@" || return $?
 			else
-				cmake_build $TARGET_LOWER static "$TOOLCHAIN_LINUX_X86_64" $CONFIGURE_OPTS "$@" || return $?
-				cmake_build $TARGET_LOWER shared "$TOOLCHAIN_LINUX_X86_64" $CONFIGURE_OPTS "$@" || return $?
+				cmake_build $TARGET_LOWER "$TOOLCHAIN_LINUX_X86_64" $CONFIGURE_OPTS "$@" || return $?
 			fi
 			;;
 		*)
 			local TOOLCHAIN_FILE=$(eval echo '${TOOLCHAIN_'$TARGET_UPPER'}')
-			cmake_build $TARGET_LOWER static "$TOOLCHAIN_FILE" $CONFIGURE_OPTS "$@" || return $?
-			cmake_build $TARGET_LOWER shared "$TOOLCHAIN_FILE" $CONFIGURE_OPTS "$@" || return $?
+			cmake_build $TARGET_LOWER "$TOOLCHAIN_FILE" $CONFIGURE_OPTS "$@" || return $?
 			;;
 	esac
 	
@@ -148,22 +140,21 @@ __main__()
 cmake_build()
 {
 	local TARGET_NAME="$1"
-	local LIBRARY_TYPE="$2"
-	local TOOLCHAIN="$3"
-	shift 3
+	local TOOLCHAIN="$2"
+	shift 2
 	
 	local INSTALL_PREFIX="$PWD/_lib/$TARGET_NAME"
-	local BUILD_SHARED_LIBS="$([[ $LIBRARY_TYPE == shared ]] && echo ON)"
 
-	local BUILD_DIR="$PWD/_build/$TARGET_NAME/$LIBRARY_TYPE"
+	local BUILD_DIR="$PWD/_build/$TARGET_NAME"
+	rm -rf "$BUILD_DIR"
 	mkdir -p "$BUILD_DIR"
-	rm -rf "$BUILD_DIR/*"
+	rm -rf "$INSTALL_PREFIX"
+	mkdir -p "$INSTALL_PREFIX"
 	pushd "$BUILD_DIR" >/dev/null 2>/dev/null
 	cmake "$PROJ_DIR" \
 		-DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN" \
 		-DCMAKE_INSTALL_PREFIX="$INSTALL_PREFIX" \
 		-DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
-		-DBUILD_SHARED_LIBS="$BUILD_SHARED_LIBS" \
 		"$@" \
 		|| return $?
 	cmake --build . --target install --config Release || return $?
@@ -185,11 +176,11 @@ cmake_build()
 		cp -L "$LIBRARY_FILE" "$BIN_DIR/$FILE_NAME.$FILE_EXT_FIX" || return $?
 	done < <(
 		find "$INSTALL_PREFIX" \
-			-iname "lib$COMBINED_LIBNAME.a" \
-			-o -iname "lib$COMBINED_LIBNAME.so" \
-			-o -iname "lib$COMBINED_LIBNAME.dylib" \
-			-o -iname "$COMBINED_LIBNAME.lib" \
-			-o -iname "$COMBINED_LIBNAME.dll"
+			-iname "lib${LIBRARY_NAME}.a" \
+			-o -iname "lib${LIBRARY_NAME}.so" \
+			-o -iname "lib${LIBRARY_NAME}.dylib" \
+			-o -iname "${LIBRARY_NAME}.lib" \
+			-o -iname "${LIBRARY_NAME}.dll"
 	)
 }
 
