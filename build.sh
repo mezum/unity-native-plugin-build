@@ -46,9 +46,9 @@ TOOLCHAIN_DEFAULT="$CMAKE_TOOLCHAIN_DIR/cxx11.cmake"
 
 # License files
 LICENSE_FILES="$(cat <<- __EOL__
-	${PROJ_DIR}/ogg/COPYING	$PLUGINS_DIR/COPYING-ogg
-	${PROJ_DIR}/opus/COPYING	$PLUGINS_DIR/COPYING-opus
-	${PROJ_DIR}/opusfile-src/COPYING	$PLUGINS_DIR/COPYING-opusfile
+	${PROJ_DIR}/ogg/COPYING	$BIN_DIR/COPYING-ogg
+	${PROJ_DIR}/opus/COPYING	$BIN_DIR/COPYING-opus
+	${PROJ_DIR}/opusfile-src/COPYING	$BIN_DIR/COPYING-opusfile
 __EOL__
 )"
 
@@ -62,30 +62,30 @@ __main__()
 	local TARGET_UPPER="$(tr '[a-z]' '[A-Z]' <<< $TARGET)"
 	case "$TARGET_LOWER" in
 		"android")
-			cmake_build Android/armeabi-v7a "$TOOLCHAIN_ANDROID_ARMV7" "$@" || return $?
-			cmake_build Android/arm64-v8a "$TOOLCHAIN_ANDROID_ARM64" "$@" || return $?
-			cmake_build Android/x86 "$TOOLCHAIN_ANDROID_X86" "$@" || return $?
+			cmake_build android_armv7 "$TOOLCHAIN_ANDROID_ARMV7" "$@" || return $?
+			cmake_build android_arm64 "$TOOLCHAIN_ANDROID_ARM64" "$@" || return $?
+			cmake_build android_x86 "$TOOLCHAIN_ANDROID_X86" "$@" || return $?
 			;;
 		"ios")
 			export XCODE_XCCONFIG_FILE="$PROJ_DIR/polly/scripts/NoCodeSign.xcconfig"
 			cmake_build iOS "$TOOLCHAIN_IOS" -GXcode -DIOS_DEPLOYMENT_SDK_VERSION=9.0 "$@" || return $?
 			;;
 		"macos")
-			cmake_build macOS/x86_64 "$TOOLCHAIN_MACOS" -GXcode "$@" || return $?
+			cmake_build macOS_x86_64 "$TOOLCHAIN_MACOS" -GXcode "$@" || return $?
 			;;
 		"win64")
-			cmake_build Windows/x86_64 "$TOOLCHAIN_WIN64" -G'Visual Studio 15 2017' "$@" || return $?
+			cmake_build Windows_x86_64 "$TOOLCHAIN_WIN64" -G'Visual Studio 15 2017' "$@" || return $?
 			;;
 		"linux_x86_64")
 			if [[ $(uname) == Linux && $(uname -m) == x86_64 ]]; then
-				cmake_build Linux/x86_64 "$TOOLCHAIN_DEFAULT" "$@" || return $?
+				cmake_build Linux_x86_64 "$TOOLCHAIN_DEFAULT" "$@" || return $?
 			else
-				cmake_build Linux/x86_64 "$TOOLCHAIN_LINUX_X86_64" "$@" || return $?
+				cmake_build Linux_x86_64 "$TOOLCHAIN_LINUX_X86_64" "$@" || return $?
 			fi
 			;;
 		*)
 			local TOOLCHAIN_FILE=$(eval echo '${TOOLCHAIN_'$TARGET_UPPER'}')
-			cmake_build Plugins/$TARGET_LOWER "$TOOLCHAIN_FILE" "$@" || return $?
+			cmake_build $TARGET_LOWER "$TOOLCHAIN_FILE" "$@" || return $?
 			;;
 	esac
 	
@@ -101,18 +101,13 @@ cmake_build()
 	local SUBDIR="$1"
 	local CMAKE_TOOLCHAIN_FILE="$2"
 	shift 2
-	
-	local CMAKE_INSTALL_PREFIX="$INSTALL_DIR/$SUBDIR"
-	rm -rf "$CMAKE_INSTALL_PREFIX"
-	mkdir -p "$CMAKE_INSTALL_PREFIX"
 
 	local CMAKE_BUILD_DIR="$BUILD_DIR/$SUBDIR"
-	rm -rf "$CMAKE_BUILD_DIR"
-	mkdir -p "$CMAKE_BUILD_DIR"
+	local CMAKE_INSTALL_PREFIX="$INSTALL_DIR/$SUBDIR"
+	local OUTPUT_DIR="$BIN_DIR/$SUBDIR"
 	
-	local OUTPUT_DIR="$PLUGINS_DIR/$SUBDIR"
-	rm -rf "$OUTPUT_DIR"
-	mkdir -p "$OUTPUT_DIR"
+	rm -rf "$CMAKE_BUILD_DIR" "$CMAKE_INSTALL_PREFIX" "$OUTPUT_DIR"
+	mkdir -p "$CMAKE_BUILD_DIR" "$CMAKE_INSTALL_PREFIX" "$OUTPUT_DIR"
 	
 	pushd "$CMAKE_BUILD_DIR" >/dev/null 2>/dev/null
 	cmake "$PROJ_DIR" \
@@ -128,15 +123,16 @@ cmake_build()
 		local FILE_NAME_EXT="$(basename "$LIBRARY_FILE")"
 		local FILE_EXT="${FILE_NAME_EXT##*.}"
 		local FILE_NAME="${FILE_NAME_EXT%.*}"
-		
+	
 		local FILE_EXT_FIX="$FILE_EXT"
 		if [[ $FILE_EXT == dylib ]]; then
+			FILE_NAME="${FILE_NAME:3}"
 			FILE_EXT_FIX="bundle"
 		fi
-		
+	
 		cp -L "$LIBRARY_FILE" "$OUTPUT_DIR/$FILE_NAME.$FILE_EXT_FIX" || return $?
 	done < <(
-		find "$CMAKE_INSTALL_PREFIX" \
+		find "$CMAKE_INSTALL_PREFIX/lib" \
 			-iname "lib*.a" \
 			-o -iname "lib*.so" \
 			-o -iname "lib*.dylib" \
