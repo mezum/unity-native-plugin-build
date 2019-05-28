@@ -133,11 +133,11 @@ cmake_build()
 		cp -L "$LIBRARY_FILE" "$OUTPUT_DIR/$FILE_NAME.$FILE_EXT_FIX" || return $?
 	done < <(
 		find "$CMAKE_INSTALL_PREFIX/lib" \
-			-iname "lib*.a" \
-			-o -iname "lib*.so" \
-			-o -iname "lib*.dylib" \
-			-o -iname "*.lib" \
-			-o -iname "*.dll"
+			-iname "lib${LIBRARY_NAME}.a" \
+			-o -iname "lib${LIBRARY_NAME}.so" \
+			-o -iname "lib${LIBRARY_NAME}.dylib" \
+			-o -iname "${LIBRARY_NAME}.lib" \
+			-o -iname "${LIBRARY_NAME}.dll"
 	)
 }
 
