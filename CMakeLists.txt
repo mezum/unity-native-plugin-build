@@ -43,6 +43,13 @@ foreach(library IN LISTS UNITY_PLUGIN_LIBRARIES)
 		${UNITY_PLUGIN_SUB_STATIC_FILE_GENERATORS}
 		$<TARGET_FILE:${library}>
 	)
+	set_target_properties(${library}
+		PROPERTIES
+			# for iOS
+			XCODE_ATTRIBUTE_ENABLE_BITCODE YES
+			XCODE_ATTRIBUTE_BITCODE_GENERATION_MODE bitcode
+			XCODE_ATTRIBUTE_BITCODE_GENERATION_MODE[variant=Debug] marker
+	)
 endforeach()
 
 # make shared library target
