@@ -29,9 +29,8 @@ set -u
 PROJ_DIR="$(cd "$(dirname "${BASH_SCRIPT:-$0}")"; pwd)"
 CMAKE_TOOLCHAIN_DIR="$PROJ_DIR/polly"
 BUILD_DIR="$PWD/_build"
-INSTALL_DIR="$PWD/_install"
+DUMMY_DIR="$PWD/_install"
 BIN_DIR="$PWD/_bin"
-PLUGINS_DIR="$BIN_DIR/Plugins"
 LIBRARY_NAME='unityplugin'
 
 # toolchains
@@ -103,42 +102,22 @@ cmake_build()
 	shift 2
 
 	local CMAKE_BUILD_DIR="$BUILD_DIR/$SUBDIR"
-	local CMAKE_INSTALL_PREFIX="$INSTALL_DIR/$SUBDIR"
-	local OUTPUT_DIR="$BIN_DIR/$SUBDIR"
+	local CMAKE_INSTALL_PREFIX="$DUMMY_DIR/$SUBDIR"
+	local UNITY_PLUGIN_INSTALL_PREFIX="$BIN_DIR/$SUBDIR"
 	
-	rm -rf "$CMAKE_BUILD_DIR" "$CMAKE_INSTALL_PREFIX" "$OUTPUT_DIR"
-	mkdir -p "$CMAKE_BUILD_DIR" "$CMAKE_INSTALL_PREFIX" "$OUTPUT_DIR"
+	rm -rf "$CMAKE_BUILD_DIR" "$CMAKE_INSTALL_PREFIX" "$UNITY_PLUGIN_INSTALL_PREFIX"
+	mkdir -p "$CMAKE_BUILD_DIR" "$CMAKE_INSTALL_PREFIX" "$UNITY_PLUGIN_INSTALL_PREFIX"
 	
 	pushd "$CMAKE_BUILD_DIR" >/dev/null 2>/dev/null
 	cmake "$PROJ_DIR" \
 		-DCMAKE_TOOLCHAIN_FILE="$CMAKE_TOOLCHAIN_FILE" \
 		-DCMAKE_INSTALL_PREFIX="$CMAKE_INSTALL_PREFIX" \
 		-DCMAKE_BUILD_TYPE="$BUILD_TYPE" \
+		-DUNITY_PLUGIN_INSTALL_PREFIX="$UNITY_PLUGIN_INSTALL_PREFIX" \
 		"$@" \
 		|| return $?
 	cmake --build . --target install --config Release || return $?
 	popd >/dev/null 2>/dev/null
-	
-	while read LIBRARY_FILE; do
-		local FILE_NAME_EXT="$(basename "$LIBRARY_FILE")"
-		local FILE_EXT="${FILE_NAME_EXT##*.}"
-		local FILE_NAME="${FILE_NAME_EXT%.*}"
-	
-		local FILE_EXT_FIX="$FILE_EXT"
-		if [[ $FILE_EXT == dylib ]]; then
-			FILE_NAME="${FILE_NAME:3}"
-			FILE_EXT_FIX="bundle"
-		fi
-	
-		cp -L "$LIBRARY_FILE" "$OUTPUT_DIR/$FILE_NAME.$FILE_EXT_FIX" || return $?
-	done < <(
-		find "$CMAKE_INSTALL_PREFIX/lib" \
-			-iname "lib${LIBRARY_NAME}.a" \
-			-o -iname "lib${LIBRARY_NAME}.so" \
-			-o -iname "lib${LIBRARY_NAME}.dylib" \
-			-o -iname "${LIBRARY_NAME}.lib" \
-			-o -iname "${LIBRARY_NAME}.dll"
-	)
 }
 
 __main__ "$@"
